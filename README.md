@@ -6,6 +6,7 @@ Una [API RESTful](https://aws.amazon.com/es/what-is/restful-api/) para gestionar
 
 - **Nombre:** Jhon Sebastian Lema Montoya
 - **Asignatura:** Lenguaje de Programación Avanzado 2
+- **GitHub:** [Sebastianl1232](https://github.com/Sebastianl1232)
 
 ## Descripción
 
