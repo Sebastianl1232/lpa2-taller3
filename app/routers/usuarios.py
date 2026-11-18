@@ -1,6 +1,6 @@
 """Endpoints REST para administrar usuarios."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlmodel import Session
 
@@ -17,8 +17,16 @@ router = APIRouter()
 
 
 @router.get("", response_model=list[UsuarioResponse])
-def listar_usuarios(session: Session = Depends(get_session)):
-    usuarios = session.exec(select(Usuario).order_by(Usuario.id)).scalars().all()
+def listar_usuarios(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+    session: Session = Depends(get_session),
+):
+    usuarios = (
+        session.exec(select(Usuario).order_by(Usuario.id).offset(skip).limit(limit))
+        .scalars()
+        .all()
+    )
     return usuarios
 
 

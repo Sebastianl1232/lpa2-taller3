@@ -458,3 +458,64 @@ class TestEndpointsGenerales:
         response = client.get("/health")
         assert response.status_code == 200
         assert response.json()["status"] == "healthy"
+
+
+class TestPaginacion:
+    """Tests para los parámetros de paginación."""
+
+    def test_limitar_usuarios(self, client: TestClient, usuario_test: Usuario):
+        otro = client.post(
+            "/api/usuarios",
+            json={"nombre": "Segundo", "correo": "segundo@example.com"},
+        )
+        assert otro.status_code == 201
+
+        response = client.get("/api/usuarios", params={"skip": 0, "limit": 1})
+        assert response.status_code == 200
+        assert len(response.json()) == 1
+
+    def test_limitar_canciones(self, client: TestClient, cancion_test: Cancion):
+        response = client.get("/api/canciones", params={"skip": 0, "limit": 1})
+        assert response.status_code == 200
+        assert len(response.json()) == 1
+
+    def test_limite_invalido(self, client: TestClient):
+        response = client.get("/api/canciones", params={"limit": 0})
+        assert response.status_code == 422
+
+
+class TestEstadisticas:
+    """Tests para estadísticas y canciones populares."""
+
+    def test_estadisticas_generales(
+        self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
+    ):
+        client.post(
+            "/api/favoritos",
+            json={
+                "id_usuario": usuario_test.id,
+                "id_cancion": cancion_test.id,
+            },
+        )
+        response = client.get("/api/estadisticas/uso")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_usuarios"] == 1
+        assert data["total_canciones"] == 1
+        assert data["total_favoritos"] == 1
+        assert data["canciones_mas_favoritas"][0]["titulo"] == cancion_test.titulo
+
+    def test_canciones_populares(
+        self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
+    ):
+        client.post(
+            "/api/favoritos",
+            json={
+                "id_usuario": usuario_test.id,
+                "id_cancion": cancion_test.id,
+            },
+        )
+        response = client.get("/api/canciones/populares", params={"limit": 5})
+        assert response.status_code == 200
+        assert len(response.json()) == 1
+        assert response.json()[0]["total_favoritos"] == 1

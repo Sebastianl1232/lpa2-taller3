@@ -1,6 +1,6 @@
 """Endpoints REST para administrar favoritos."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlmodel import Session
 
@@ -48,8 +48,16 @@ def crear_favorito_para_ids(
 
 
 @router.get("", response_model=list[FavoritoResponse])
-def listar_favoritos(session: Session = Depends(get_session)):
-    favoritos = session.exec(select(Favorito).order_by(Favorito.id)).scalars().all()
+def listar_favoritos(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+    session: Session = Depends(get_session),
+):
+    favoritos = (
+        session.exec(select(Favorito).order_by(Favorito.id).offset(skip).limit(limit))
+        .scalars()
+        .all()
+    )
     return [
         FavoritoResponse.model_validate(favorito, from_attributes=True)
         for favorito in favoritos

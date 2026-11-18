@@ -12,8 +12,16 @@ router = APIRouter()
 
 
 @router.get("", response_model=list[CancionResponse])
-def listar_canciones(session: Session = Depends(get_session)):
-    canciones = session.exec(select(Cancion).order_by(Cancion.id)).scalars().all()
+def listar_canciones(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
+    session: Session = Depends(get_session),
+):
+    canciones = (
+        session.exec(select(Cancion).order_by(Cancion.id).offset(skip).limit(limit))
+        .scalars()
+        .all()
+    )
     return [
         CancionResponse.model_validate(cancion, from_attributes=True)
         for cancion in canciones
@@ -34,6 +42,8 @@ def buscar_canciones(
     titulo: str | None = Query(default=None),
     artista: str | None = Query(default=None),
     genero: str | None = Query(default=None),
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=50, ge=1, le=200),
     session: Session = Depends(get_session),
 ):
     consulta = select(Cancion)
@@ -43,7 +53,11 @@ def buscar_canciones(
         consulta = consulta.where(Cancion.artista.ilike(f"%{artista}%"))
     if genero:
         consulta = consulta.where(Cancion.genero.ilike(f"%{genero}%"))
-    canciones = session.exec(consulta.order_by(Cancion.id)).scalars().all()
+    canciones = (
+        session.exec(consulta.order_by(Cancion.id).offset(skip).limit(limit))
+        .scalars()
+        .all()
+    )
     return [
         CancionResponse.model_validate(cancion, from_attributes=True)
         for cancion in canciones

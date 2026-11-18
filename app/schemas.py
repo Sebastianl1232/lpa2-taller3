@@ -135,3 +135,21 @@ class FavoritoResponse(BaseModel):
     id_usuario: int
     id_cancion: int
     fecha_marcado: datetime
+
+
+class CancionPopular(BaseModel):
+    """Canción con su cantidad de favoritos."""
+
+    id: int
+    titulo: str
+    artista: str
+    total_favoritos: int
+
+
+class EstadisticasUso(BaseModel):
+    """Resumen estadístico de usuarios, canciones y favoritos."""
+
+    total_usuarios: int
+    total_canciones: int
+    total_favoritos: int
+    canciones_mas_favoritas: list[CancionPopular]

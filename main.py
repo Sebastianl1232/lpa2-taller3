@@ -10,7 +10,7 @@ from sqlalchemy import text
 from starlette.requests import Request
 
 from app.database import create_db_and_tables, engine
-from app.routers import canciones, favoritos, usuarios
+from app.routers import canciones, estadisticas, favoritos, usuarios
 from musica_api.config import settings
 
 
@@ -47,13 +47,14 @@ app = FastAPI(
 # Esto es importante para desarrollo con frontend separado
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción, especificar orígenes permitidos
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=settings.cors_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 
+app.include_router(estadisticas.router, prefix="/api", tags=["Estadísticas"])
 app.include_router(usuarios.router, prefix="/api/usuarios", tags=["Usuarios"])
 app.include_router(canciones.router, prefix="/api/canciones", tags=["Canciones"])
 app.include_router(favoritos.router, prefix="/api/favoritos", tags=["Favoritos"])
