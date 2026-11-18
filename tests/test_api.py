@@ -24,13 +24,14 @@ def session_fixture():
     Crea una sesión de base de datos en memoria para cada test.
     Se limpia automáticamente después de cada test.
     """
-    # TODO: Crear engine en memoria (SQLite)
-
-    # TODO: Crear todas las tablas
-
-    # TODO: Crear sesión
-
-    pass
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
 
 
 # Fixture para cliente de pruebas
@@ -39,19 +40,30 @@ def client_fixture(session: Session):
     """
     Crea un cliente de pruebas de FastAPI con la sesión de test.
     """
-    # TODO: Override de la dependencia get_session
 
-    pass
+    def override_get_session():
+        yield session
+
+    app.dependency_overrides[get_session] = override_get_session
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.clear()
 
 
-# TODO: Fixture para crear usuarios de prueba
 @pytest.fixture(name="usuario_test")
 def usuario_test_fixture(session: Session):
     """
     Crea un usuario de prueba en la base de datos.
     """
 
-    pass
+    usuario = Usuario(
+        nombre="Usuario de prueba",
+        correo="usuario.prueba@example.com",
+    )
+    session.add(usuario)
+    session.commit()
+    session.refresh(usuario)
+    return usuario
 
 
 # TODO: Fixture para crear canciones de prueba
@@ -84,49 +96,59 @@ def cancion_test_fixture(session: Session):
 class TestUsuarios:
     """Tests para los endpoints de usuarios."""
 
-    # TODO: Test para listar usuarios
     def test_listar_usuarios(self, client: TestClient):
         """Test para GET /api/usuarios"""
+        response = client.get("/api/usuarios")
+        assert response.status_code == 200
+        assert response.json() == []
 
-        pass
-
-    # TODO: Test para crear usuario
     def test_crear_usuario(self, client: TestClient):
         """Test para POST /api/usuarios"""
+        response = client.post(
+            "/api/usuarios",
+            json={"nombre": "Ana García", "correo": "ana@example.com"},
+        )
+        assert response.status_code == 201
+        assert response.json()["nombre"] == "Ana García"
 
-        pass
-
-    # TODO: Test para crear usuario con correo duplicado
     def test_crear_usuario_correo_duplicado(
         self, client: TestClient, usuario_test: Usuario
     ):
         """Test para verificar que no se permiten correos duplicados"""
+        response = client.post(
+            "/api/usuarios",
+            json={
+                "nombre": "Otro usuario",
+                "correo": usuario_test.correo,
+            },
+        )
+        assert response.status_code == 409
 
-        pass
-
-    # TODO: Test para obtener usuario por ID
     def test_obtener_usuario(self, client: TestClient, usuario_test: Usuario):
         """Test para GET /api/usuarios/{id}"""
+        response = client.get(f"/api/usuarios/{usuario_test.id}")
+        assert response.status_code == 200
+        assert response.json()["correo"] == usuario_test.correo
 
-        pass
-
-    # TODO: Test para obtener usuario inexistente
     def test_obtener_usuario_no_existe(self, client: TestClient):
         """Test para verificar error 404 con usuario inexistente"""
+        response = client.get("/api/usuarios/999999")
+        assert response.status_code == 404
 
-        pass
-
-    # TODO: Test para actualizar usuario
     def test_actualizar_usuario(self, client: TestClient, usuario_test: Usuario):
         """Test para PUT /api/usuarios/{id}"""
+        response = client.put(
+            f"/api/usuarios/{usuario_test.id}",
+            json={"nombre": "Usuario actualizado"},
+        )
+        assert response.status_code == 200
+        assert response.json()["nombre"] == "Usuario actualizado"
 
-        pass
-
-    # TODO: Test para eliminar usuario
     def test_eliminar_usuario(self, client: TestClient, usuario_test: Usuario):
         """Test para DELETE /api/usuarios/{id}"""
-
-        pass
+        response = client.delete(f"/api/usuarios/{usuario_test.id}")
+        assert response.status_code == 204
+        assert client.get(f"/api/usuarios/{usuario_test.id}").status_code == 404
 
 
 # =============================================================================
