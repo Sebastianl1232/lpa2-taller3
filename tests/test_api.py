@@ -66,26 +66,23 @@ def usuario_test_fixture(session: Session):
     return usuario
 
 
-# TODO: Fixture para crear canciones de prueba
 @pytest.fixture(name="cancion_test")
 def cancion_test_fixture(session: Session):
     """
     Crea una cancion de prueba en la base de datos.
     """
-    # cancion = Cancion(
-    #     titulo="canción Test",
-    #     director="Director Test",
-    #     genero="Drama",
-    #     duracion=120,
-    #     año=2020,
-    #     clasificacion="PG-13",
-    #     sinopsis="Una canción de prueba"
-    # )
-    # session.add(cancion)
-    # session.commit()
-    # session.refresh(cancion)
-    # return cancion
-    pass
+    cancion = Cancion(
+        titulo="Canción Test",
+        artista="Artista Test",
+        album="Álbum Test",
+        duracion=180,
+        año=2020,
+        genero="Rock",
+    )
+    session.add(cancion)
+    session.commit()
+    session.refresh(cancion)
+    return cancion
 
 
 # =============================================================================
@@ -159,35 +156,66 @@ class TestUsuarios:
 class TestCancions:
     """Tests para los endpoints de cancións."""
 
-    # TODO: Test para listar cancións
     def test_listar_cancions(self, client: TestClient):
         """Test para GET /api/cancions"""
+        response = client.get("/api/canciones")
+        assert response.status_code == 200
+        assert response.json() == []
 
-        pass
-
-    # TODO: Test para crear canción
     def test_crear_cancion(self, client: TestClient):
         """Test para POST /api/cancions"""
+        response = client.post(
+            "/api/canciones",
+            json={
+                "titulo": "Imagine",
+                "artista": "John Lennon",
+                "album": "Imagine",
+                "duracion": 183,
+                "año": 1971,
+                "genero": "Rock",
+            },
+        )
+        assert response.status_code == 201
+        assert response.json()["titulo"] == "Imagine"
 
-        pass
-
-    # TODO: Test para obtener canción por ID
     def test_obtener_cancion(self, client: TestClient, cancion_test: Cancion):
         """Test para GET /api/cancions/{id}"""
+        response = client.get(f"/api/canciones/{cancion_test.id}")
+        assert response.status_code == 200
+        assert response.json()["titulo"] == cancion_test.titulo
 
-        pass
-
-    # TODO: Test para actualizar canción
     def test_actualizar_cancion(self, client: TestClient, cancion_test: Cancion):
         """Test para PUT /api/cancions/{id}"""
+        response = client.put(
+            f"/api/canciones/{cancion_test.id}",
+            json={"titulo": "Canción actualizada"},
+        )
+        assert response.status_code == 200
+        assert response.json()["titulo"] == "Canción actualizada"
 
-        pass
-
-    # TODO: Test para eliminar canción
     def test_eliminar_cancion(self, client: TestClient, cancion_test: Cancion):
         """Test para DELETE /api/cancions/{id}"""
+        response = client.delete(f"/api/canciones/{cancion_test.id}")
+        assert response.status_code == 204
+        assert client.get(f"/api/canciones/{cancion_test.id}").status_code == 404
 
-        pass
+    def test_buscar_canciones(self, client: TestClient, cancion_test: Cancion):
+        """Test para GET /api/canciones/buscar"""
+        response = client.get(
+            "/api/canciones/buscar",
+            params={"titulo": "Test", "artista": "Artista", "genero": "Rock"},
+        )
+        assert response.status_code == 200
+        assert len(response.json()) == 1
+        assert response.json()[0]["id"] == cancion_test.id
+
+    def test_buscar_canciones_sin_filtros(
+        self, client: TestClient, cancion_test: Cancion
+    ):
+        """Test para buscar canciones sin parámetros"""
+        response = client.get("/api/canciones/buscar")
+        assert response.status_code == 200
+        assert len(response.json()) == 1
 
     # TODO: Test para buscar cancións
     def test_buscar_cancions(self, client: TestClient, cancion_test: Cancion):

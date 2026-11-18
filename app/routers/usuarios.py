@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("", response_model=list[UsuarioResponse])
 def listar_usuarios(session: Session = Depends(get_session)):
-    usuarios = session.exec(select(Usuario).order_by(Usuario.id)).all()
+    usuarios = session.exec(select(Usuario).order_by(Usuario.id)).scalars().all()
     return usuarios
 
 

@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import create_db_and_tables
-from app.routers import usuarios
+from app.routers import canciones, usuarios
 from musica_api.config import settings
 
 # TODO: Importar la configuración desde app.config
@@ -46,6 +46,7 @@ app.add_middleware(
 
 
 app.include_router(usuarios.router, prefix="/api/usuarios", tags=["Usuarios"])
+app.include_router(canciones.router, prefix="/api/canciones", tags=["Canciones"])
 
 
 # Crear un endpoint raíz que retorne información básica de la API
