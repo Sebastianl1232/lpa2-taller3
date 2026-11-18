@@ -238,29 +238,46 @@ class TestCancions:
 class TestFavoritos:
     """Tests para los endpoints de favoritos."""
 
-    # TODO: Test para listar favoritos
     def test_listar_favoritos(self, client: TestClient):
         """Test para GET /api/favoritos"""
+        response = client.get("/api/favoritos")
+        assert response.status_code == 200
+        assert response.json() == []
 
-        pass
-
-    # TODO: Test para crear favorito
     def test_crear_favorito(
         self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
     ):
         """Test para POST /api/favoritos"""
+        response = client.post(
+            "/api/favoritos",
+            json={
+                "id_usuario": usuario_test.id,
+                "id_cancion": cancion_test.id,
+            },
+        )
+        assert response.status_code == 201
+        assert response.json()["id_usuario"] == usuario_test.id
 
-        pass
-
-    # TODO: Test para crear favorito duplicado
     def test_crear_favorito_duplicado(
         self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
     ):
         """Test para verificar que no se permiten favoritos duplicados"""
+        client.post(
+            "/api/favoritos",
+            json={
+                "id_usuario": usuario_test.id,
+                "id_cancion": cancion_test.id,
+            },
+        )
+        response = client.post(
+            "/api/favoritos",
+            json={
+                "id_usuario": usuario_test.id,
+                "id_cancion": cancion_test.id,
+            },
+        )
+        assert response.status_code == 409
 
-        pass
-
-    # TODO: Test para eliminar favorito
     def test_eliminar_favorito(
         self,
         client: TestClient,
@@ -269,18 +286,25 @@ class TestFavoritos:
         cancion_test: Cancion,
     ):
         """Test para DELETE /api/favoritos/{id}"""
+        favorito = client.post(
+            "/api/favoritos",
+            json={
+                "id_usuario": usuario_test.id,
+                "id_cancion": cancion_test.id,
+            },
+        ).json()
+        response = client.delete(f"/api/favoritos/{favorito['id']}")
+        assert response.status_code == 204
 
-        pass
-
-    # TODO: Test para marcar favorito desde usuario
     def test_marcar_favorito_usuario(
         self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
     ):
         """Test para POST /api/usuarios/{id}/favoritos/{id_cancion}"""
+        response = client.post(
+            f"/api/usuarios/{usuario_test.id}/favoritos/{cancion_test.id}"
+        )
+        assert response.status_code == 201
 
-        pass
-
-    # TODO: Test para listar favoritos de usuario
     def test_listar_favoritos_usuario(
         self,
         client: TestClient,
@@ -289,8 +313,10 @@ class TestFavoritos:
         cancion_test: Cancion,
     ):
         """Test para GET /api/usuarios/{id}/favoritos"""
-
-        pass
+        client.post(f"/api/usuarios/{usuario_test.id}/favoritos/{cancion_test.id}")
+        response = client.get(f"/api/usuarios/{usuario_test.id}/favoritos")
+        assert response.status_code == 200
+        assert len(response.json()) == 1
 
 
 # =============================================================================

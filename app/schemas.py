@@ -117,3 +117,21 @@ class CancionResponse(BaseModel):
     año: int
     genero: str
     fecha_creacion: datetime
+
+
+class FavoritoCreate(BaseModel):
+    """Datos necesarios para marcar una canción como favorita."""
+
+    id_usuario: int = Field(gt=0)
+    id_cancion: int = Field(gt=0)
+
+
+class FavoritoResponse(BaseModel):
+    """Representación pública de un favorito."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    id_usuario: int
+    id_cancion: int
+    fecha_marcado: datetime
