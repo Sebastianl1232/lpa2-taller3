@@ -24,12 +24,16 @@ def crear_favorito_para_ids(
     if not cancion:
         raise HTTPException(status_code=404, detail="Canción no encontrada")
 
-    existente = session.exec(
-        select(Favorito).where(
-            Favorito.id_usuario == id_usuario,
-            Favorito.id_cancion == id_cancion,
+    existente = (
+        session.exec(
+            select(Favorito).where(
+                Favorito.id_usuario == id_usuario,
+                Favorito.id_cancion == id_cancion,
+            )
         )
-    ).first()
+        .scalars()
+        .first()
+    )
     if existente:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

@@ -24,9 +24,11 @@ def listar_usuarios(session: Session = Depends(get_session)):
 
 @router.post("", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
 def crear_usuario(datos: UsuarioCreate, session: Session = Depends(get_session)):
-    existente = session.exec(
-        select(Usuario).where(Usuario.correo == datos.correo)
-    ).first()
+    existente = (
+        session.exec(select(Usuario).where(Usuario.correo == datos.correo))
+        .scalars()
+        .first()
+    )
     if existente:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -60,12 +62,16 @@ def actualizar_usuario(
 
     cambios = datos.model_dump(exclude_unset=True)
     if "correo" in cambios:
-        existente = session.exec(
-            select(Usuario).where(
-                Usuario.correo == cambios["correo"],
-                Usuario.id != usuario_id,
+        existente = (
+            session.exec(
+                select(Usuario).where(
+                    Usuario.correo == cambios["correo"],
+                    Usuario.id != usuario_id,
+                )
             )
-        ).first()
+            .scalars()
+            .first()
+        )
         if existente:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -132,12 +138,16 @@ def marcar_favorito_usuario(
     if not cancion:
         raise HTTPException(status_code=404, detail="Canción no encontrada")
 
-    existente = session.exec(
-        select(Favorito).where(
-            Favorito.id_usuario == usuario_id,
-            Favorito.id_cancion == cancion_id,
+    existente = (
+        session.exec(
+            select(Favorito).where(
+                Favorito.id_usuario == usuario_id,
+                Favorito.id_cancion == cancion_id,
+            )
         )
-    ).first()
+        .scalars()
+        .first()
+    )
     if existente:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -160,12 +170,16 @@ def eliminar_favorito_usuario(
     cancion_id: int,
     session: Session = Depends(get_session),
 ):
-    favorito = session.exec(
-        select(Favorito).where(
-            Favorito.id_usuario == usuario_id,
-            Favorito.id_cancion == cancion_id,
+    favorito = (
+        session.exec(
+            select(Favorito).where(
+                Favorito.id_usuario == usuario_id,
+                Favorito.id_cancion == cancion_id,
+            )
         )
-    ).first()
+        .scalars()
+        .first()
+    )
     if not favorito:
         raise HTTPException(status_code=404, detail="Favorito no encontrado")
     session.delete(favorito)

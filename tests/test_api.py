@@ -300,6 +300,48 @@ class TestFavoritos:
         ).json()
         response = client.delete(f"/api/favoritos/{favorito['id']}")
         assert response.status_code == 204
+        assert client.get(f"/api/favoritos/{favorito['id']}").status_code == 404
+
+    def test_obtener_favorito(
+        self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
+    ):
+        """Test para GET /api/favoritos/{id}"""
+        creado = client.post(
+            "/api/favoritos",
+            json={
+                "id_usuario": usuario_test.id,
+                "id_cancion": cancion_test.id,
+            },
+        )
+        response = client.get(f"/api/favoritos/{creado.json()['id']}")
+        assert response.status_code == 200
+        assert response.json()["id_usuario"] == usuario_test.id
+
+    def test_eliminar_favorito_usuario(
+        self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
+    ):
+        """Test para DELETE /api/usuarios/{id}/favoritos/{id_cancion}"""
+        creado = client.post(
+            f"/api/usuarios/{usuario_test.id}/favoritos/{cancion_test.id}"
+        )
+        assert creado.status_code == 201
+
+        eliminado = client.delete(
+            f"/api/usuarios/{usuario_test.id}/favoritos/{cancion_test.id}"
+        )
+        assert eliminado.status_code == 204
+
+        favoritos = client.get(f"/api/usuarios/{usuario_test.id}/favoritos")
+        assert favoritos.status_code == 200
+        assert favoritos.json() == []
+
+    def test_favorito_usuario_duplicado(
+        self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
+    ):
+        """Test para verificar duplicados desde la ruta de usuario"""
+        ruta = f"/api/usuarios/{usuario_test.id}/favoritos/{cancion_test.id}"
+        assert client.post(ruta).status_code == 201
+        assert client.post(ruta).status_code == 409
 
     def test_marcar_favorito_usuario(
         self, client: TestClient, usuario_test: Usuario, cancion_test: Cancion
@@ -402,3 +444,17 @@ class TestValidacion:
         """Test para verificar que los campos requeridos son obligatorios"""
         response = client.post("/api/usuarios", json={"nombre": ""})
         assert response.status_code == 422
+
+
+class TestEndpointsGenerales:
+    """Tests para los endpoints raíz y de salud."""
+
+    def test_raiz(self, client: TestClient):
+        response = client.get("/")
+        assert response.status_code == 200
+        assert response.json()["documentacion"] == "/docs"
+
+    def test_health(self, client: TestClient):
+        response = client.get("/health")
+        assert response.status_code == 200
+        assert response.json()["status"] == "healthy"
