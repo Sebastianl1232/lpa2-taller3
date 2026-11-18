@@ -1,7 +1,6 @@
 """Modelos de persistencia de la API de música."""
 
 from datetime import datetime
-from typing import Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -11,7 +10,7 @@ class Usuario(SQLModel, table=True):
 
     __tablename__ = "usuarios"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     nombre: str
     correo: str = Field(unique=True, index=True)
     fecha_registro: datetime = Field(default_factory=datetime.now)
@@ -24,7 +23,7 @@ class Cancion(SQLModel, table=True):
 
     __tablename__ = "canciones"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     titulo: str
     artista: str
     album: str
@@ -41,10 +40,10 @@ class Favorito(SQLModel, table=True):
 
     __tablename__ = "favoritos"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     id_usuario: int = Field(foreign_key="usuarios.id")
     id_cancion: int = Field(foreign_key="canciones.id")
     fecha_marcado: datetime = Field(default_factory=datetime.now)
 
-    usuario: Optional[Usuario] = Relationship(back_populates="favoritos")
-    cancion: Optional[Cancion] = Relationship(back_populates="favoritos")
+    usuario: Usuario | None = Relationship(back_populates="favoritos")
+    cancion: Cancion | None = Relationship(back_populates="favoritos")
