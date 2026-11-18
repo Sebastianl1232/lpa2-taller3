@@ -1,9 +1,9 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.database import create_db_and_tables
-from app.routers import usuarios, peliculas, favoritos
 
 # TODO: Importar la configuración desde app.config
 
@@ -17,7 +17,7 @@ async def lifespan(app: FastAPI):
     # Startup: Crear tablas en la base de datos
     create_db_and_tables()
     yield
-    
+
     # Shutdown: Limpiar recursos si es necesario
     print("cerrando aplicación...")
 
@@ -30,7 +30,6 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
     # TODO: Agregar información de contacto y licencia
-
 )
 
 
@@ -58,7 +57,7 @@ async def root():
     Retorna información básica y enlaces a la documentación.
     """
     return {
-        # TODO: Agregar información 
+        # TODO: Agregar información
     }
 
 
@@ -84,9 +83,7 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         # TODO: Configurar el servidor uvicorn con los parámetros apropiados
     )
-
-
