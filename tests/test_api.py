@@ -217,17 +217,22 @@ class TestCancions:
         assert response.status_code == 200
         assert len(response.json()) == 1
 
-    # TODO: Test para buscar cancións
     def test_buscar_cancions(self, client: TestClient, cancion_test: Cancion):
         """Test para GET /api/cancions/buscar"""
+        response = client.get("/api/canciones/buscar", params={"artista": "Artista"})
+        assert response.status_code == 200
+        assert len(response.json()) == 1
 
-        pass
-
-    # TODO: Test para buscar cancións con múltiples filtros
-    def test_buscar_cancions_multiples_filtros(self, client: TestClient):
+    def test_buscar_cancions_multiples_filtros(
+        self, client: TestClient, cancion_test: Cancion
+    ):
         """Test para búsqueda con múltiples parámetros"""
-
-        pass
+        response = client.get(
+            "/api/canciones/buscar",
+            params={"titulo": "Test", "genero": "Rock", "artista": "Artista"},
+        )
+        assert response.status_code == 200
+        assert len(response.json()) == 1
 
 
 # =============================================================================
@@ -327,18 +332,39 @@ class TestFavoritos:
 class TestIntegracion:
     """Tests de integración que prueban flujos completos."""
 
-    # TODO: Test de flujo completo: crear usuario, canción y marcar favorito
     def test_flujo_completo(self, client: TestClient):
         """Test que verifica el flujo completo de la aplicación"""
-        # 1. Crear usuario
+        usuario = client.post(
+            "/api/usuarios",
+            json={"nombre": "Integración", "correo": "integracion@example.com"},
+        )
+        assert usuario.status_code == 201
 
-        # 2. Crear canción
+        cancion = client.post(
+            "/api/canciones",
+            json={
+                "titulo": "Integración",
+                "artista": "Pruebas",
+                "album": "Taller",
+                "duracion": 200,
+                "año": 2020,
+                "genero": "Test",
+            },
+        )
+        assert cancion.status_code == 201
 
-        # 3. Marcar como favorito
+        favorito = client.post(
+            "/api/favoritos",
+            json={
+                "id_usuario": usuario.json()["id"],
+                "id_cancion": cancion.json()["id"],
+            },
+        )
+        assert favorito.status_code == 201
 
-        # 4. Verificar que aparece en favoritos del usuario
-
-        pass
+        favoritos = client.get(f"/api/usuarios/{usuario.json()['id']}/favoritos")
+        assert favoritos.status_code == 200
+        assert len(favoritos.json()) == 1
 
 
 # =============================================================================
@@ -349,20 +375,30 @@ class TestIntegracion:
 class TestValidacion:
     """Tests para validaciones de datos."""
 
-    # TODO: Test para validar email inválido
     def test_email_invalido(self, client: TestClient):
         """Test para verificar validación de email"""
+        response = client.post(
+            "/api/usuarios",
+            json={"nombre": "Usuario", "correo": "correo-invalido"},
+        )
+        assert response.status_code == 422
 
-        pass
-
-    # TODO: Test para validar año de canción
     def test_año_cancion_invalido(self, client: TestClient):
         """Test para verificar validación de año"""
+        response = client.post(
+            "/api/canciones",
+            json={
+                "titulo": "Canción",
+                "artista": "Artista",
+                "album": "Álbum",
+                "duracion": 180,
+                "año": 1800,
+                "genero": "Rock",
+            },
+        )
+        assert response.status_code == 422
 
-        pass
-
-    # TODO: Test para validar campos requeridos
     def test_campos_requeridos(self, client: TestClient):
         """Test para verificar que los campos requeridos son obligatorios"""
-
-        pass
+        response = client.post("/api/usuarios", json={"nombre": ""})
+        assert response.status_code == 422
