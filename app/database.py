@@ -1,14 +1,13 @@
 """Configuración de la conexión y sesiones de base de datos."""
 
 from collections.abc import Generator
+
 from sqlmodel import Session, SQLModel, create_engine
+
 from musica_api.config import settings
 
-
 connect_args = (
-    {"check_same_thread": False}
-    if settings.database_url.startswith("sqlite")
-    else {}
+    {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
 )
 engine = create_engine(
     settings.database_url,
@@ -25,7 +24,7 @@ def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
 
 
-def get_session() -> Generator[Session, None, None]:
+def get_session() -> Generator[Session]:
     """Entrega una sesión de base de datos para una solicitud."""
     with Session(engine) as session:
         yield session
